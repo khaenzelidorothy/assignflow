@@ -12,22 +12,73 @@ export const api = axios.create({
 // Request interceptor for auth
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    const authTokensStr = localStorage.getItem('authTokens')
+    if (authTokensStr) {
+      try {
+        const authTokens = JSON.parse(authTokensStr)
+        if (authTokens.access) {
+          config.headers.Authorization = `Bearer ${authTokens.access}`
+        }
+      } catch (e) {
+        console.error('Failed to parse auth tokens:', e)
+      }
     }
   }
   return config
 })
 
-// Response interceptor for error handling
+// Response interceptor for error handling and token refresh
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      window.location.href = '/login'
+  async (error) => {
+    const originalRequest = error.config
+
+    // If 401 and we have a refresh token, try to refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      if (typeof window !== 'undefined') {
+        const authTokensStr = localStorage.getItem('authTokens')
+        if (authTokensStr) {
+          try {
+            const authTokens = JSON.parse(authTokensStr)
+            if (authTokens.refresh) {
+              try {
+                const refreshResponse = await axios.post(`${API_URL}/auth/refresh/`, {
+                  refresh: authTokens.refresh,
+                })
+
+                const newTokens = {
+                  access: refreshResponse.data.access,
+                  refresh: authTokens.refresh,
+                }
+
+                localStorage.setItem('authTokens', JSON.stringify(newTokens))
+                originalRequest.headers.Authorization = `Bearer ${newTokens.access}`
+                return api(originalRequest)
+              } catch (refreshError) {
+                // Refresh failed, logout
+                localStorage.removeItem('authTokens')
+                localStorage.removeItem('user')
+                if (window.location.pathname !== '/login') {
+                  window.location.href = '/login'
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Failed to handle token refresh:', e)
+          }
+        }
+
+        // No refresh token or failed, redirect to login
+        if (window.location.pathname !== '/login') {
+          localStorage.removeItem('authTokens')
+          localStorage.removeItem('user')
+          window.location.href = '/login'
+        }
+      }
     }
+
     return Promise.reject(error)
   }
 )
