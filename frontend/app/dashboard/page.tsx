@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { Navigation } from '@/components/layout/Navigation'
 
 export default function DashboardPage() {
   const [metrics] = useState({
@@ -13,19 +14,21 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <span className="text-xl font-bold">📊 Dashboard</span>
+    <div className="flex min-h-screen bg-gray-50">
+      <Navigation />
+      <main className="flex-1 lg:ml-64 w-full">
+        {/* Top bar */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+          <div className="px-8 py-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">📊 Dashboard</h1>
             <Link href="/settings" className="btn-secondary">
               Settings
             </Link>
           </div>
         </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <div className="card">
@@ -83,6 +86,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
     </div>
