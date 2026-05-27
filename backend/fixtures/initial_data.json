@@ -1,0 +1,15 @@
+[
+  {
+    "model": "organizations.organization",
+    "pk": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "fields": {
+      "name": "Sample Organization",
+      "slug": "sample-organization",
+      "subscription_plan": "free",
+      "timezone": "UTC",
+      "is_active": true,
+      "settings": {},
+      "metadata": {}
+    }
+  }
+]
