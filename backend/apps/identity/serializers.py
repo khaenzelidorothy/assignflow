@@ -17,16 +17,31 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    organization_name = serializers.CharField(max_length=255, write_only=True)
     
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'phone_number']
+        fields = ['email', 'first_name', 'last_name', 'password', 'phone_number', 'organization_name']
     
     def create(self, validated_data):
+        from apps.organizations.models import Organization, OrganizationUser
+        
         password = validated_data.pop('password')
+        organization_name = validated_data.pop('organization_name')
+        
+        # Create user
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
+        
+        # Create organization and associate user as owner
+        organization = Organization.objects.create(name=organization_name)
+        OrganizationUser.objects.create(
+            organization=organization,
+            user=user,
+            role='owner'
+        )
+        
         return user
 
 
@@ -38,11 +53,21 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     
     @classmethod
     def get_token(cls, user):
+        from apps.organizations.models import OrganizationUser
+        
         token = super().get_token(user)
         # Add custom claims
         token['email'] = user.email
         token['first_name'] = user.first_name
         token['last_name'] = user.last_name
+        
+        # Add organization info
+        org_membership = OrganizationUser.objects.filter(user=user, is_active=True).first()
+        if org_membership:
+            token['organization_id'] = str(org_membership.organization.id)
+            token['organization_name'] = org_membership.organization.name
+            token['organization_role'] = org_membership.role
+        
         return token
     
     def validate(self, attrs):

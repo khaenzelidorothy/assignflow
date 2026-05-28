@@ -22,6 +22,8 @@ export default function LoginPage() {
   const [signupLastName, setSignupLastName] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
   const [signupPhone, setSignupPhone] = useState('')
+  const [signupOrgName, setSignupOrgName] = useState('')
+  const [signupSuccess, setSignupSuccess] = useState(false)
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showSignupPassword, setShowSignupPassword] = useState(false)
 
@@ -46,10 +48,27 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      await signup(signupEmail, signupFirstName, signupLastName, signupPassword, signupPhone)
-      router.push('/dashboard')
+      await signup(signupEmail, signupFirstName, signupLastName, signupPassword, signupPhone, signupOrgName)
+      // Show success message and switch to login tab
+      setSignupSuccess(true)
+      setActiveTab('login')
+      // Clear signup form
+      setSignupEmail('')
+      setSignupFirstName('')
+      setSignupLastName('')
+      setSignupPassword('')
+      setSignupPhone('')
+      setSignupOrgName('')
+      // Set login email for convenience
+      setLoginEmail(signupEmail)
     } catch (err: any) {
-      setLocalError(err.response?.data?.detail || err.response?.data?.email?.[0] || 'Signup failed')
+      console.log('[v0] Signup error:', err)
+      const errorMsg = err.response?.data?.detail || 
+                      err.response?.data?.email?.[0] || 
+                      err.response?.data?.organization_name?.[0] ||
+                      err.message ||
+                      'Signup failed'
+      setLocalError(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -89,6 +108,13 @@ export default function LoginPage() {
             Sign Up
           </button>
         </div>
+
+        {/* Success Message */}
+        {signupSuccess && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+            Account created successfully! Please sign in with your credentials.
+          </div>
+        )}
 
         {/* Error Message */}
         {displayError && (
@@ -150,6 +176,18 @@ export default function LoginPage() {
         {/* Signup Form */}
         {activeTab === 'signup' && (
           <form onSubmit={handleSignup} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Organization Name</label>
+              <input
+                type="text"
+                value={signupOrgName}
+                onChange={(e) => setSignupOrgName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Your Company Name"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
