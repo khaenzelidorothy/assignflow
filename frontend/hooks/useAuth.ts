@@ -47,48 +47,38 @@ export function useAuth() {
   }, [])
 
   const signup = useCallback(
-    async (email: string, first_name: string, last_name: string, password: string, phone_number?: string) => {
+    async (email: string, first_name: string, last_name: string, password: string, phone_number?: string, organization_name?: string) => {
       setError(null)
       setIsLoading(true)
       try {
-        // Create user
+        // Create user with organization
         const signupResponse = await axios.post(`${API_BASE_URL}/users/`, {
           email,
           first_name,
           last_name,
           password,
           phone_number: phone_number || '',
+          organization_name: organization_name || 'My Organization',
         })
 
-        // Login to get tokens
-        const loginResponse = await axios.post(`${API_BASE_URL}/auth/login/`, {
-          email,
-          password,
-        })
-
-        const newTokens: AuthTokens = {
-          access: loginResponse.data.access,
-          refresh: loginResponse.data.refresh,
-        }
-
-        // Get user info
-        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
-          headers: {
-            Authorization: `Bearer ${newTokens.access}`,
-          },
-        })
-
-        const userData = userResponse.data
-        setTokens(newTokens)
-        setUser(userData)
-
-        // Store in localStorage
-        localStorage.setItem('authTokens', JSON.stringify(newTokens))
-        localStorage.setItem('user', JSON.stringify(userData))
-
-        return userData
+        // Don't auto-login - user will login on signin page
+        return signupResponse.data
       } catch (err: any) {
-        const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message
+        console.log('[v0] Signup error details:', err.response?.data)
+        let errorMessage = 'Signup failed'
+        
+        if (err.response?.data?.detail) {
+          errorMessage = err.response.data.detail
+        } else if (err.response?.data?.email && Array.isArray(err.response.data.email)) {
+          errorMessage = err.response.data.email[0]
+        } else if (err.response?.data?.organization_name && Array.isArray(err.response.data.organization_name)) {
+          errorMessage = err.response.data.organization_name[0]
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message
+        } else if (err.message) {
+          errorMessage = err.message
+        }
+        
         setError(errorMessage)
         throw err
       } finally {
