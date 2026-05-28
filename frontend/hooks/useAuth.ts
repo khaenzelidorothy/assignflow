@@ -19,6 +19,14 @@ interface AuthTokens {
   refresh: string
 }
 
+const setAuthCookie = (token: string) => {
+  document.cookie = `authToken=${token}; path=/; SameSite=Lax`
+}
+
+const removeAuthCookie = () => {
+  document.cookie = 'authToken=; Max-Age=0; path=/; SameSite=Lax'
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [tokens, setTokens] = useState<AuthTokens | null>(null)
@@ -63,6 +71,34 @@ export function useAuth() {
 
         // Don't auto-login - user will login on signin page
         return signupResponse.data
+        // Login to get tokens
+        const loginResponse = await axios.post(`${API_BASE_URL}/auth/login/`, {
+          email,
+          password,
+        })
+
+        const newTokens: AuthTokens = {
+          access: loginResponse.data.access,
+          refresh: loginResponse.data.refresh,
+        }
+
+        // Get user info
+        const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+          headers: {
+            Authorization: `Bearer ${newTokens.access}`,
+          },
+        })
+
+        const userData = userResponse.data
+        setTokens(newTokens)
+        setUser(userData)
+
+        // Store in localStorage
+        localStorage.setItem('authTokens', JSON.stringify(newTokens))
+        localStorage.setItem('user', JSON.stringify(userData))
+        setAuthCookie(newTokens.access)
+
+        return userData
       } catch (err: any) {
         console.log('[v0] Signup error details:', err.response?.data)
         let errorMessage = 'Signup failed'
@@ -117,6 +153,7 @@ export function useAuth() {
         // Store in localStorage
         localStorage.setItem('authTokens', JSON.stringify(newTokens))
         localStorage.setItem('user', JSON.stringify(userData))
+        setAuthCookie(newTokens.access)
 
         return userData
       } catch (err: any) {
@@ -135,6 +172,7 @@ export function useAuth() {
     setUser(null)
     localStorage.removeItem('authTokens')
     localStorage.removeItem('user')
+    removeAuthCookie()
   }, [])
 
   const refreshTokens = useCallback(async () => {
@@ -151,6 +189,7 @@ export function useAuth() {
 
       setTokens(newTokens)
       localStorage.setItem('authTokens', JSON.stringify(newTokens))
+      setAuthCookie(newTokens.access)
       return newTokens
     } catch (err) {
       logout()

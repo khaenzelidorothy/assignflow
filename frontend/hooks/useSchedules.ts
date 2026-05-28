@@ -218,7 +218,7 @@ export function useSchedules(scheduleId?: string) {
     schedules: schedules || [],
     currentSchedule,
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     taskStatus,
     generateSchedule,
     regenerateRole,

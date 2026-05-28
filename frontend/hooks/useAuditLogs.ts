@@ -138,7 +138,7 @@ export function useAuditLogs(filter?: AuditFilter) {
   return {
     logs: logs || [],
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     getLogsByUser,
     getLogsByAction,
     getLogsByDateRange,

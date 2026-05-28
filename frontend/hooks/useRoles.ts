@@ -119,7 +119,7 @@ export function useRoles() {
   return {
     roles: roles || [],
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     createRole,
     updateRole,
     deleteRole,

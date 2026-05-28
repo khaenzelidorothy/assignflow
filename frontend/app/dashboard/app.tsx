@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { MetricsGrid } from '@/components/dashboard/MetricsGrid';

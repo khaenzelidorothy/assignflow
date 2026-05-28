@@ -103,7 +103,7 @@ export function useSkills() {
   return {
     skills: skills || [],
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     createSkill,
     updateSkill,
     deleteSkill,

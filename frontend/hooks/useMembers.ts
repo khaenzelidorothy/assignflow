@@ -1,28 +1,10 @@
-'use client'
+"use client"
 
 import { useState, useCallback } from 'react'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
+import type { Member } from '@/types'
 
-interface Member {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone_number: string
-  status: 'active' | 'inactive' | 'on_leave' | 'suspended'
-  member_skills: Array<{
-    id: string
-    skill: { id: string; name: string }
-    proficiency_level: number
-  }>
-  fairness_profile?: {
-    fairness_score: number
-    burnout_score: number
-    workload_score: number
-    total_assignments: number
-  }
-}
 
 interface CreateMemberData {
   first_name: string
@@ -124,7 +106,7 @@ export function useMembers() {
   return {
     members: members || [],
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     createMember,
     updateMember,
     deleteMember,

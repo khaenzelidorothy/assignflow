@@ -1,4 +1,4 @@
-export { Button } from './Button'
+export { Button } from './button'
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card'
 export { Input } from './Input'
 export { Select } from './Select'
