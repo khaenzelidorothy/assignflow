@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.http import Http404
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
 
@@ -18,6 +19,15 @@ class OrganizationMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
+        if not hasattr(request, 'user') or not request.user.is_authenticated:
+            try:
+                auth_result = JWTAuthentication().authenticate(request)
+            except Exception:
+                auth_result = None
+
+            if auth_result is not None:
+                request.user, request.auth = auth_result
+
         organization = self.get_organization(request)
         
         if organization:
@@ -52,11 +62,16 @@ class OrganizationMiddleware:
                     raise Http404("Organization not found")
             return None
         
-        # Get organization from user's profile
-        try:
+        # Get organization from user's profile or membership
+        if hasattr(request.user, 'organization'):
             return request.user.organization
-        except AttributeError:
-            return None
+
+        from .models import OrganizationUser
+        membership = OrganizationUser.objects.filter(
+            user=request.user,
+            is_active=True,
+        ).select_related('organization').first()
+        return membership.organization if membership else None
     
     @classmethod
     def get_current_organization(cls):

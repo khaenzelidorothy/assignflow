@@ -6,6 +6,17 @@ export interface Member {
   email: string
   phone_number: string
   status: 'active' | 'inactive' | 'on_leave' | 'suspended'
+  member_skills?: Array<{
+    id: string
+    skill: { id: string; name: string }
+    proficiency_level: number
+  }>
+  fairness_profile?: {
+    fairness_score: number
+    burnout_score: number
+    workload_score: number
+    total_assignments: number
+  }
   full_name: string
 }
 

@@ -81,7 +81,7 @@ export function useDashboard() {
   return {
     summary,
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     refreshDashboard,
     isRefreshing,
     isEverythingOkay,

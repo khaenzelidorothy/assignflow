@@ -106,7 +106,7 @@ export function useSettings() {
   return {
     settings,
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     updateSettings,
     updateNotificationSettings,
     updateSchedulingMode,

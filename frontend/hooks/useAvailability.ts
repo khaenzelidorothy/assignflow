@@ -99,7 +99,7 @@ export function useAvailability(weekStart?: string) {
   return {
     availabilities: availabilities || [],
     isLoading,
-    error: error || fetchError,
+    error: error || (fetchError ? fetchError.message || String(fetchError) : null),
     submitAvailability,
     autoFillFromLastWeek,
     getMembersNotSubmitted,
